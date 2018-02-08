@@ -34,7 +34,6 @@ def k():
 			spreadx = (askx - bidx) if (bidx and askx) else None
 			tobewritten = (y.id, x, datetime.datetime.now(), 'market price', { 'bid': bidx, 'ask': askx, 'spread': spreadx })
 			tobewritten = str(tobewritten)
-			print(tobewritten)
 			f.write(tobewritten)
 
 sched.start()
