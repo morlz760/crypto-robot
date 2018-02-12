@@ -5,7 +5,6 @@ import os
 import sys
 import json
 import datetime
-from apscheduler.schedulers.blocking import BlockingScheduler
 
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(root + '/python')
@@ -16,24 +15,44 @@ import ccxt  # noqa: E402
 independentreserve = ccxt.independentreserve({})
 btcmarkets = ccxt.btcmarkets({})
 
-sched = BlockingScheduler()
 
 exchange = [independentreserve, btcmarkets]
 
 symbols = ('ETH/AUD', 'BTC/AUD')
 
-f = open('entries.txt', 'a')
-
-@sched.scheduled_job('interval', minutes=15)
-def k():
+def genMarketPrices():
+	marketgroup = {}
 	for y in exchange:
+		bidasks = {}
 		for x in symbols:
 			orderbook = y.fetch_ticker(x)
 			bidx = orderbook.get('bid')
 			askx = orderbook.get('ask')
-			spreadx = (askx - bidx) if (bidx and askx) else None
-			tobewritten = (y.id, x, datetime.datetime.now(), 'market price', { 'bid': bidx, 'ask': askx, 'spread': spreadx })
-			tobewritten = str(tobewritten)
-			f.write(tobewritten)
+			bidasks[x+' bid'] = bidx
+			bidasks[x+' ask'] = askx
+		marketgroup[y.id] = bidasks
+	return(marketgroup)
 
-sched.start()
+marketprices = genMarketPrices()
+
+def findopps(marketprices):
+	findingmax = {}
+	findingmin = {}
+	for x in marketprices:
+		t = marketprices[x]
+		print(t)
+		for y in t:
+			for x in symbols:
+				xb = x+' bid'
+				xm = x+' ask'
+				if y == xb:
+					findingmax[xb] = t[y]
+				elif y == xm:
+					findingmin[xm] = t[y]
+				
+			maxval = max(findingmax[xb])
+			print(maxval)
+
+
+	
+findopps(marketprices)
